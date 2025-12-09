@@ -1,107 +1,77 @@
-# tauri-plugin-decorum
+# tauri-plugin-frame
 
-Being a designer, I'm _very_ particular about window decorations. This Tauri (v2) plugin is an opinionated take on titlebars that my gripes with the default ones. Features:
-1. retain native features, like Windows Snap Layout.
-2. blend into your app's UI better with transparency and overlay controls.
-3. inset macOS traffic lights that are often misaligned with other window contents.
+Custom window frame controls for Tauri v2 on Windows. Supports Windows Snap Layout and custom titlebar styling.
 
 ![demo](./wheeee.gif)
 
-## Installation and Usage
-
-For a full example app that uses this plugin, check out [examples/tauri-app](examples/tauri-app/).
-
-### install the plugin
+## Install
 
 ```bash
-cargo add tauri-plugin-decorum
+cargo add tauri-plugin-frame
 ```
 
-### set permissions
-
-You'll need to set these for your window in `src-tauri/capabilities/default.json`
-
-```
-"core:window:allow-close",
-"core:window:allow-center",
-"core:window:allow-minimize",
-"core:window:allow-maximize",
-"core:window:allow-set-size",
-"core:window:allow-set-focus",
-"core:window:allow-is-maximized",
-"core:window:allow-start-dragging",
-"core:window:allow-toggle-maximize",
-"decorum:allow-show-snap-overlay",
-```
-
-And ensure the `withGlobalTauri` in your `tauri.conf.json` is set to `true`.
-
-\*there's probably a better way to handle plugin permissions that I haven't found yet. if you have, pls lmk!
-
-
-### usage in tauri:
-
-```rust
-use tauri::Manager;
-
-use tauri_plugin_decorum::WebviewWindowExt; // adds helper methods to WebviewWindow
-
-fn main() {
-	tauri::Builder::default()
-		.plugin(tauri_plugin_decorum::init()) // initialize the decorum plugin
-		.setup(|app| {
-			// Create a custom titlebar for main window
-			// On Windows this hides decoration and creates custom window controls
-			// On macOS it needs hiddenTitle: true and titleBarStyle: overlay
-			let main_window = app.get_webview_window("main").unwrap();
-			main_window.create_overlay_titlebar().unwrap();
-
-			// Some macOS-specific helpers
-			#[cfg(target_os = "macos")] {
-				// Set a custom inset to the traffic lights
-				main_window.set_traffic_lights_inset(12.0, 16.0).unwrap();
-
-				// Make window transparent without privateApi
-				main_window.make_transparent().unwrap()
-
-				// Set window level
-				// NSWindowLevel: https://developer.apple.com/documentation/appkit/nswindowlevel
-				main_window.set_window_level(25).unwrap()
-			}
-
-			Ok(())
-		})
-		.run(tauri::generate_context!())
-		.expect("error while running tauri application");
+Add to `src-tauri/capabilities/default.json`:
+```json
+{
+  "permissions": ["frame:default", "core:window:default"]
 }
 ```
 
-### custom buttons with css:
-
-If you want to style the window controls yourself, you can use one of the following class-names to do so:
-
-```css
-button.decorum-tb-btn,
-button#decorum-tb-minimize,
-button#decorum-tb-maximize,
-button#decorum-tb-close,
-div[data-tauri-decorum-tb], {}
+Set in `tauri.conf.json`:
+```json
+{
+  "app": { "withGlobalTauri": true },
+  "windows": [{ "decorations": false }]
+}
 ```
 
-## Development Guide
+## Usage
 
-PRs and issues welcome! Here's a short primer to get you started with development on this:
+**Basic (manual per window):**
+```rust
+use tauri::Manager;
+use tauri_plugin_frame::WebviewWindowExt;
 
-1. Ensure you have all the [Tauri prerequisites](https://beta.tauri.app/start/prerequisites/) set up
-2. Clone this repo
-3. Use the [example app](examples/tauri-app) as a test bed with `yarn tauri dev`
+tauri::Builder::default()
+    .plugin(tauri_plugin_frame::init())
+    .setup(|app| {
+        app.get_webview_window("main").unwrap().create_overlay_titlebar()?;
+        Ok(())
+    })
+```
 
-## Roadmap
+**Auto-apply to all windows:**
+```rust
+use tauri_plugin_frame::FramePluginBuilder;
 
-~~There's some missing features I'd still like to add, all documented on the [Issues page](https://github.com/clearlysid/tauri-plugin-decorum/issues).~~
+tauri::Builder::default()
+    .plugin(
+        FramePluginBuilder::new()
+            .titlebar_height(40)  // default: 32
+            .auto_titlebar(true)
+            .build()
+    )
+```
 
-All the features I wanted are now added by me or a community member — thank you so much for your contributions! 🥳
+## CSS Styling
 
-The project mostly in maintainance mode now — no breaking API changes, other than architecture improvements and bugfixes. PRs are always welcome! I'll help merge them as quick as I can. In the long run I hope the core team incorporates all these within Tauri and I look forward to making this plugin obsolete.
+```css
+[data-tauri-frame-tb] { background: rgba(0,0,0,0.1); }
+#frame-tb-minimize, #frame-tb-maximize, #frame-tb-close { /* styles */ }
+```
 
-Meanwhile, I hope you find it useful. Happy building! 🥂
+## API
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `titlebar_height(u32)` | 32 | Titlebar height in pixels |
+| `auto_titlebar(bool)` | false | Auto-apply to all windows |
+
+| Method | Description |
+|--------|-------------|
+| `create_overlay_titlebar()` | Apply titlebar with default height |
+| `create_overlay_titlebar_with_height(u32)` | Apply titlebar with custom height |
+
+## License
+
+MIT - Originally forked from [tauri-plugin-decorum](https://github.com/clearlysid/tauri-plugin-decorum)

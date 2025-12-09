@@ -1,0 +1,5 @@
+"$schema" = "schemas/schema.json"
+
+[default]
+description = "Default permissions for the frame plugin"
+permissions = ["allow-show-snap-overlay"]

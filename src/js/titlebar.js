@@ -1,38 +1,27 @@
+(() => {
+	if (document.querySelector("[data-tauri-frame-tb]")) return;
 
-document.addEventListener("DOMContentLoaded", () => {
-	let tbEl = document.querySelector("[data-tauri-decorum-tb]");
+	const tb = document.createElement("div");
+	tb.setAttribute("data-tauri-frame-tb", "");
+	tb.setAttribute("role", "group");
+	tb.setAttribute("aria-label", "Window controls");
+	Object.assign(tb.style, {
+		top: "0",
+		left: "0",
+		zIndex: "100",
+		width: "100%",
+		height: "32px",
+		display: "flex",
+		position: "fixed",
+		alignItems: "end",
+		justifyContent: "end",
+		backgroundColor: "transparent"
+	});
 
-	if (!tbEl) {
-		console.log(
-			"DECORUM: Element with data-tauri-decorum-tb not found. Creating one.",
-		);
+	const drag = document.createElement("div");
+	Object.assign(drag.style, { width: "100%", height: "100%", background: "transparent" });
+	drag.setAttribute("data-tauri-drag-region", "");
+	tb.appendChild(drag);
 
-		// Create titlebar element
-		tbEl = document.createElement("div");
-		tbEl.setAttribute("data-tauri-decorum-tb", "");
-		tbEl.setAttribute("role", "group");
-		tbEl.setAttribute("lang", "en");
-		tbEl.setAttribute("aria-label", "Window controls");
-		tbEl.style.top = 0;
-		tbEl.style.left = 0;
-		tbEl.style.zIndex = 100;
-		tbEl.style.width = "100%";
-		tbEl.style.height = "32px";
-		tbEl.style.display = "flex";
-		tbEl.style.position = "fixed";
-		tbEl.style.alignItems = "end";
-		tbEl.style.justifyContent = "end";
-		tbEl.style.backgroundColor = "transparent";
-
-		// Create draggable area
-		const drag = document.createElement("div");
-		drag.style.width = "100%";
-		drag.style.height = "100%";
-		drag.style.background = "transparent";
-		drag.setAttribute("data-tauri-drag-region", "");
-		tbEl.appendChild(drag);
-
-		// add tbEl to the body
-		document.body.prepend(tbEl);
-	}
-});
+	document.body.prepend(tb);
+})();

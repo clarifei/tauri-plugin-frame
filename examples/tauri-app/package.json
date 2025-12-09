@@ -13,7 +13,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "@tauri-apps/api": "^2.0.0-beta.15",
-    "tauri-plugin-decorum-api": "link:../../"
+    "tauri-plugin-frame-api": "link:../../"
   },
   "devDependencies": {
     "@types/react": "^18.2.15",

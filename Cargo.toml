@@ -1,31 +1,21 @@
 [package]
-name = "tauri-plugin-decorum"
+name = "tauri-plugin-frame"
 version = "1.1.1"
-authors = ["Siddharth <siddharth99c@gmail.com>"]
+authors = ["Siddharth <siddharth99c@gmail.com>", "clarifei"]
 description = "Opnionated window decoration controls for Tauri apps."
 edition = "2021"
 rust-version = "1.70"
 exclude = ["/examples", "/webview-dist", "/webview-src", "/node_modules"]
-links = "tauri-plugin-decorum"
+links = "tauri-plugin-frame"
 license = "MIT"
-homepage = "https://github.com/clearlysid/tauri-plugin-decorum"
-repository = "https://github.com/clearlysid/tauri-plugin-decorum"
+homepage = "https://github.com/clarifei/tauri-plugin-frame"
+repository = "https://github.com/clarifei/tauri-plugin-frame"
 
 [dependencies]
 tauri = { version = "2.0.0-rc" }
 serde = "1.0"
 anyhow = "1.0"
-
-[target.'cfg(target_os = "macos")'.dependencies]
-rand = "^0.8"
-cocoa = "0.25"
-objc = "0.2"
-
-[target.'cfg(target_os = "windows")'.dependencies]
 enigo = "0.1.3"
-
-[target.'cfg(target_os = "linux")'.dependencies]
-linicon = "2.3.0"
 
 [build-dependencies]
 tauri-plugin = { version = "2.0.0-rc", features = ["build"] }
