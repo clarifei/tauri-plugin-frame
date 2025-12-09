@@ -13,15 +13,32 @@ cargo add tauri-plugin-frame
 Add to `src-tauri/capabilities/default.json`:
 ```json
 {
-  "permissions": ["frame:default", "core:window:default"]
+  "permissions": [
+    "core:window:allow-close",
+    "core:window:allow-center",
+    "core:window:allow-minimize",
+    "core:window:allow-maximize",
+    "core:window:allow-set-size",
+    "core:window:allow-set-focus",
+    "core:window:allow-is-maximized",
+    "core:window:allow-start-dragging",
+    "core:window:allow-toggle-maximize",
+    "frame:default"
+  ]
 }
 ```
 
 Set in `tauri.conf.json`:
 ```json
 {
-  "app": { "withGlobalTauri": true },
-  "windows": [{ "decorations": false }]
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "decorations": false,
+      }
+    ]
+  }
 }
 ```
 
