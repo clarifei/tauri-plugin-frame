@@ -32,7 +32,7 @@ jobs:
       - run: cargo fmt --all -- --check
 
   clippy:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
