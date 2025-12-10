@@ -1,0 +1,48 @@
+# Commit Message Template
+# Header format:
+# <type>(<scope>): <summary>
+#
+# Rules for header:
+# - Max 50 characters #################################|
+# - Imperative tone (e.g., Add, Fix, Remove)
+# - Start with lowercase after scope colon
+# - No trailing period
+#
+# Examples:
+# feat(auth): add JWT authentication support
+# fix(api): prevent crash on invalid request id
+# refactor(utils): simplify date parser
+
+
+<type>(<scope>): <summary>
+
+
+# Body (optional)
+# Use only when additional context is helpful.
+#
+# Guidelines:
+# - Leave one blank line before this body
+# - Explain WHAT and WHY — not HOW
+# - Include ticket/reference ID if relevant (e.g., #123, JIRA key)
+# - Use bullet points for clarity
+# - Wrap text at 72 chars ###########################################|
+#
+# Example:
+# - migrate merge and alternate-merge operations to Web Workers
+#   to improve performance by offloading heavy processing
+# - update UI state transitions for async worker execution
+# - preserve existing merge subtitle behavior and configs
+
+
+# Footer (optional)
+# Use for:
+# - BREAKING CHANGE notes
+# - Issue references (Closes/Fixes/Related)
+# - Co-authors
+#
+# Examples:
+# BREAKING CHANGE: removed legacy merge API
+# Closes #123
+# Related to #200
+#
+# Co-authored-by: Name <user@users.noreply.github.com>
