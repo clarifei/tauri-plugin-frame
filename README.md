@@ -2,9 +2,7 @@
 
 Custom window frame controls for Tauri v2 on Windows. Supports Windows 11 Snap Layout and custom titlebar styling.
 
-<p align="center">
-  <img src="./image/frame.webp" alt="tauri-plugin-frame demo" width="600" />
-</p>
+![tauri-plugin-frame demo](./image/frame.webp)
 
 ## Features
 
