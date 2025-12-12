@@ -1,4 +1,4 @@
-![tauri-plugin-frame demo](./image/frame.avif)
+![tauri-plugin-frame demo](./image/frame.webp)
 
 # tauri-plugin-frame
 
