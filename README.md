@@ -13,13 +13,13 @@ This plugin is **Windows-only**. On other platforms, all methods are no-ops.
 
 ## Features
 
-- 🪟 **Windows 11 Snap Layout** - Hover on maximize button to show snap layout picker (Windows 11 only)
-- 🎨 **Custom Overlay Titlebar** - Replace default window decorations with fully customizable titlebar
-- 🛠️ **Builder Pattern Config** - Configure height, button width, hover colors via intuitive builder API
-- 📐 **CSS Variable Integration** - Auto-updated `--tauri-frame-controls-width` for responsive header layouts
-- ⚡ **Zero Frontend Code** - Plugin auto-injects all scripts, no JavaScript setup required
-- 🤖 **Auto-apply Mode** - Apply titlebar to all windows automatically without per-window setup
-- 🪶 **Lightweight** - Minimal footprint, Windows-only (no-op on other platforms)
+- **Windows 11 Snap Layout** - Hover on maximize button to show snap layout picker (Windows 11 only)
+- **Custom Overlay Titlebar** - Replace default window decorations with fully customizable titlebar
+- **Builder Pattern Config** - Configure height, button width, hover colors via intuitive builder API
+- **CSS Variable Integration** - Auto-updated `--tauri-frame-controls-width` for responsive header layouts
+- **Zero Frontend Code** - Plugin auto-injects all scripts, no JavaScript setup required
+- **Auto-apply Mode** - Apply titlebar to all windows automatically without per-window setup
+- **Lightweight** - Minimal footprint, Windows-only (no-op on other platforms)
 
 ## Install
 
