@@ -40,31 +40,62 @@
 				backgroundColor: "transparent"
 			});
 
-			let timer;
 			const hoverBg = id === "close" ? "rgba(196,43,28,1)" : "rgba(0,0,0,0.2)";
+
+			const state = {
+				snapTimer: null,
+				actionLock: false,
+				lastAction: 0
+			};
+
+			const cancelSnap = () => {
+				if (state.snapTimer) {
+					clearTimeout(state.snapTimer);
+					state.snapTimer = null;
+				}
+			};
+
+			const tryAction = (action) => {
+				const now = Date.now();
+				if (state.actionLock || now - state.lastAction < 200) return;
+				state.actionLock = true;
+				state.lastAction = now;
+				cancelSnap();
+				Promise.resolve(action()).finally(() => {
+					setTimeout(() => { state.actionLock = false; }, 100);
+				});
+			};
 
 			btn.onmouseenter = () => {
 				btn.style.backgroundColor = hoverBg;
-				if (id === "maximize") {
-					timer = setTimeout(() => {
-						win.setFocus().then(() => invoke("plugin:frame|show_snap_overlay"));
+				if (id === "maximize" && !state.actionLock) {
+					cancelSnap();
+					state.snapTimer = setTimeout(() => {
+						if (!state.actionLock) {
+							win.setFocus().then(() => invoke("plugin:frame|show_snap_overlay"));
+						}
+						state.snapTimer = null;
 					}, 620);
 				}
 			};
 
 			btn.onmouseleave = () => {
 				btn.style.backgroundColor = "transparent";
-				clearTimeout(timer);
+				cancelSnap();
+			};
+
+			btn.onmousedown = (e) => {
+				if (e.button === 0) cancelSnap();
 			};
 
 			if (id === "minimize") {
 				btn.innerHTML = ICONS.minimize;
 				btn.ariaLabel = "Minimize window";
-				btn.onclick = () => win.minimize();
+				btn.onclick = (e) => { e.preventDefault(); tryAction(() => win.minimize()); };
 			} else if (id === "maximize") {
 				btn.innerHTML = ICONS.maximize;
 				btn.ariaLabel = "Maximize window";
-				btn.onclick = () => { clearTimeout(timer); win.toggleMaximize(); };
+				btn.onclick = (e) => { e.preventDefault(); tryAction(() => win.toggleMaximize()); };
 				win.onResized(() => {
 					win.isMaximized().then((max) => {
 						btn.innerHTML = max ? ICONS.restore : ICONS.maximize;
