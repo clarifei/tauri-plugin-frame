@@ -3,6 +3,20 @@ use crate::error::Result;
 #[cfg(windows)]
 #[tauri::command]
 pub async fn show_snap_overlay() -> Result<()> {
+    let info = os_info::get();
+    let version = info.version();
+
+    let is_win11 = match version {
+        os_info::Version::Semantic(major, _, patch) => {
+            *major >= 11 || (*major == 10 && *patch >= 22000)
+        }
+        _ => false,
+    };
+
+    if !is_win11 {
+        return Ok(());
+    }
+
     use std::time::Duration;
 
     use enigo::{
