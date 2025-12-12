@@ -201,8 +201,12 @@ pub(crate) fn get_auto_titlebar() -> bool {
 pub(crate) fn build_scripts(height: u32, controls: Option<Vec<&str>>) -> String {
     let height_px = format!("\"{}px\"", height);
     let width_px = format!("\"{}px\"", BUTTON_WIDTH.load(Ordering::SeqCst));
-    let close_hover = CLOSE_HOVER_BG.get().map_or("rgba(196,43,28,1)", |s| s.as_str());
-    let button_hover = BUTTON_HOVER_BG.get().map_or("rgba(0,0,0,0.2)", |s| s.as_str());
+    let close_hover = CLOSE_HOVER_BG
+        .get()
+        .map_or("rgba(196,43,28,1)", |s| s.as_str());
+    let button_hover = BUTTON_HOVER_BG
+        .get()
+        .map_or("rgba(0,0,0,0.2)", |s| s.as_str());
 
     let script_tb = include_str!("js/titlebar.js").replace("\"32px\"", &height_px);
     let mut script_controls = include_str!("js/controls.js")
