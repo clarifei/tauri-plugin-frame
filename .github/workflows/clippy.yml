@@ -5,14 +5,14 @@ on:
     branches:
       - main
     paths:
-      - ".github/workflows/check.yml"
+      - ".github/workflows/clippy.yml"
       - "**/*.rs"
       - "**/Cargo.toml"
   pull_request:
     branches:
       - main
     paths:
-      - ".github/workflows/check.yml"
+      - ".github/workflows/clippy.yml"
       - "**/*.rs"
       - "**/Cargo.toml"
 
@@ -32,7 +32,7 @@ jobs:
       - run: cargo fmt --all -- --check
 
   clippy:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
       - uses: actions/checkout@v4
