@@ -33,18 +33,18 @@ impl<R: Runtime> Frame<R> {
     }
 }
 
-pub trait WebviewWindowExt {
-    fn create_overlay_titlebar(&self) -> Result<&WebviewWindow>;
-    fn create_overlay_titlebar_with_height(&self, height: u32) -> Result<&WebviewWindow>;
+pub trait WebviewWindowExt<R: Runtime> {
+    fn create_overlay_titlebar(&self) -> Result<&WebviewWindow<R>>;
+    fn create_overlay_titlebar_with_height(&self, height: u32) -> Result<&WebviewWindow<R>>;
 }
 
 #[cfg(windows)]
-impl WebviewWindowExt for WebviewWindow {
-    fn create_overlay_titlebar(&self) -> Result<&WebviewWindow> {
+impl<R: Runtime> WebviewWindowExt<R> for WebviewWindow<R> {
+    fn create_overlay_titlebar(&self) -> Result<&WebviewWindow<R>> {
         self.create_overlay_titlebar_with_height(crate::get_titlebar_height())
     }
 
-    fn create_overlay_titlebar_with_height(&self, height: u32) -> Result<&WebviewWindow> {
+    fn create_overlay_titlebar_with_height(&self, height: u32) -> Result<&WebviewWindow<R>> {
         use tauri::Listener;
 
         self.set_decorations(false)?;
@@ -62,10 +62,14 @@ impl WebviewWindowExt for WebviewWindow {
             .collect();
 
             let _ = win.eval(crate::build_scripts(height, Some(controls)));
+            if crate::snap_overlay_enabled() {
+                let _ = crate::snap::install(&win, height, crate::get_button_width());
+            }
 
             let win2 = win.clone();
             win.on_window_event(move |e| {
                 if matches!(e, tauri::WindowEvent::CloseRequested { .. }) {
+                    let _ = crate::snap::uninstall(&win2);
                     win2.unlisten(event.id());
                 }
             });
@@ -76,12 +80,12 @@ impl WebviewWindowExt for WebviewWindow {
 }
 
 #[cfg(not(windows))]
-impl WebviewWindowExt for WebviewWindow {
-    fn create_overlay_titlebar(&self) -> Result<&WebviewWindow> {
+impl<R: Runtime> WebviewWindowExt<R> for WebviewWindow<R> {
+    fn create_overlay_titlebar(&self) -> Result<&WebviewWindow<R>> {
         Ok(self)
     }
 
-    fn create_overlay_titlebar_with_height(&self, _height: u32) -> Result<&WebviewWindow> {
+    fn create_overlay_titlebar_with_height(&self, _height: u32) -> Result<&WebviewWindow<R>> {
         Ok(self)
     }
 }

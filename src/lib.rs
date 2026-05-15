@@ -3,16 +3,17 @@ use tauri::{
     Manager, Runtime,
 };
 
-mod commands;
 mod desktop;
 mod error;
+#[cfg(windows)]
+mod snap;
 
 pub use desktop::{Frame, WebviewWindowExt};
 pub use error::{Error, Result};
 
 #[cfg(windows)]
 use std::sync::{
-    atomic::{AtomicBool, AtomicU32, AtomicU64, Ordering},
+    atomic::{AtomicBool, AtomicU32, Ordering},
     OnceLock,
 };
 
@@ -26,7 +27,7 @@ static BUTTON_WIDTH: AtomicU32 = AtomicU32::new(46);
 #[cfg(windows)]
 static AUTO_TITLEBAR: AtomicBool = AtomicBool::new(false);
 #[cfg(windows)]
-static SNAP_OVERLAY_DELAY_MS: AtomicU64 = AtomicU64::new(10);
+static NATIVE_SNAP_OVERLAY: AtomicBool = AtomicBool::new(true);
 #[cfg(windows)]
 static CLOSE_HOVER_BG: OnceLock<String> = OnceLock::new();
 #[cfg(windows)]
@@ -40,7 +41,7 @@ pub struct FramePluginBuilder {
     #[cfg(windows)]
     auto_titlebar: bool,
     #[cfg(windows)]
-    snap_overlay_delay_ms: u64,
+    snap_overlay: bool,
     #[cfg(windows)]
     close_hover_bg: String,
     #[cfg(windows)]
@@ -63,7 +64,7 @@ impl FramePluginBuilder {
             #[cfg(windows)]
             auto_titlebar: false,
             #[cfg(windows)]
-            snap_overlay_delay_ms: 10,
+            snap_overlay: true,
             #[cfg(windows)]
             close_hover_bg: "rgba(196,43,28,1)".into(),
             #[cfg(windows)]
@@ -105,13 +106,13 @@ impl FramePluginBuilder {
     }
 
     #[cfg(windows)]
-    pub fn snap_overlay_delay_ms(mut self, delay: u64) -> Self {
-        self.snap_overlay_delay_ms = delay;
+    pub fn snap_overlay(mut self, enabled: bool) -> Self {
+        self.snap_overlay = enabled;
         self
     }
 
     #[cfg(not(windows))]
-    pub fn snap_overlay_delay_ms(self, _: u64) -> Self {
+    pub fn snap_overlay(self, _: bool) -> Self {
         self
     }
 
@@ -142,12 +143,12 @@ impl FramePluginBuilder {
         TITLEBAR_HEIGHT.store(self.titlebar_height, Ordering::SeqCst);
         BUTTON_WIDTH.store(self.button_width, Ordering::SeqCst);
         AUTO_TITLEBAR.store(self.auto_titlebar, Ordering::SeqCst);
-        SNAP_OVERLAY_DELAY_MS.store(self.snap_overlay_delay_ms, Ordering::SeqCst);
+        NATIVE_SNAP_OVERLAY.store(self.snap_overlay, Ordering::SeqCst);
         let _ = CLOSE_HOVER_BG.set(self.close_hover_bg);
         let _ = BUTTON_HOVER_BG.set(self.button_hover_bg);
 
+
         Builder::new("frame")
-            .invoke_handler(tauri::generate_handler![commands::show_snap_overlay])
             .setup(|app, _| {
                 app.manage(Frame::new(app.clone()));
                 Ok(())
@@ -158,9 +159,14 @@ impl FramePluginBuilder {
                     return;
                 }
                 let height = TITLEBAR_HEIGHT.load(Ordering::SeqCst);
+                let button_width = BUTTON_WIDTH.load(Ordering::SeqCst);
+                let snap_overlay = NATIVE_SNAP_OVERLAY.load(Ordering::SeqCst);
                 let webview = webview.clone();
                 tauri::async_runtime::spawn(async move {
                     let _ = webview.eval(build_scripts(height, None));
+                    if snap_overlay {
+                        let _ = crate::snap::install_window(&webview.window(), height, button_width);
+                    }
                 });
             })
             .build()
@@ -169,7 +175,6 @@ impl FramePluginBuilder {
     #[cfg(not(windows))]
     pub fn build<R: Runtime>(self) -> TauriPlugin<R> {
         Builder::new("frame")
-            .invoke_handler(tauri::generate_handler![commands::show_snap_overlay])
             .setup(|app, _| {
                 app.manage(Frame::new(app.clone()));
                 Ok(())
@@ -183,13 +188,19 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
 }
 
 #[cfg(windows)]
-pub(crate) fn get_snap_overlay_delay_ms() -> u64 {
-    SNAP_OVERLAY_DELAY_MS.load(Ordering::SeqCst)
+pub(crate) fn snap_overlay_enabled() -> bool {
+    NATIVE_SNAP_OVERLAY.load(Ordering::SeqCst)
 }
+
 
 #[cfg(windows)]
 pub(crate) fn get_titlebar_height() -> u32 {
     TITLEBAR_HEIGHT.load(Ordering::SeqCst)
+}
+
+#[cfg(windows)]
+pub(crate) fn get_button_width() -> u32 {
+    BUTTON_WIDTH.load(Ordering::SeqCst)
 }
 
 #[cfg(windows)]

@@ -11,17 +11,11 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(
             FramePluginBuilder::new()
-                // Titlebar height in pixels
                 .titlebar_height(32)
-                // Button width in pixels
                 .button_width(46)
-                // Automatically apply titlebar to all windows
                 .auto_titlebar(true)
-                // Delay before pressing Alt to hide snap overlay numbers (ms)
-                .snap_overlay_delay_ms(10)
-                // Close button hover background color
+                .snap_overlay(true)
                 .close_hover_bg("rgba(196,43,28,1)")
-                // Other buttons hover background color
                 .button_hover_bg("rgba(255,255,255,0.1)")
                 .build(),
         )

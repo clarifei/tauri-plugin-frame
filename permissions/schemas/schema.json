@@ -295,22 +295,10 @@
       "type": "string",
       "oneOf": [
         {
-          "description": "Enables the show_snap_overlay command without any pre-configured scope.",
-          "type": "string",
-          "const": "allow-show-snap-overlay",
-          "markdownDescription": "Enables the show_snap_overlay command without any pre-configured scope."
-        },
-        {
-          "description": "Denies the show_snap_overlay command without any pre-configured scope.",
-          "type": "string",
-          "const": "deny-show-snap-overlay",
-          "markdownDescription": "Denies the show_snap_overlay command without any pre-configured scope."
-        },
-        {
-          "description": "Default permissions for the frame plugin\n#### This default permission set includes:\n\n- `allow-show-snap-overlay`",
+          "description": "Default permissions for the frame plugin",
           "type": "string",
           "const": "default",
-          "markdownDescription": "Default permissions for the frame plugin\n#### This default permission set includes:\n\n- `allow-show-snap-overlay`"
+          "markdownDescription": "Default permissions for the frame plugin"
         }
       ]
     }

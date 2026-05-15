@@ -1,5 +1,2 @@
-import { invoke } from "@tauri-apps/api/core";
-
-export async function showSnapOverlay(): Promise<void> {
-  await invoke("plugin:frame|show_snap_overlay");
-}
+// Native Windows 11 Snap Layout support is installed by the Rust plugin.
+// No frontend command is required.

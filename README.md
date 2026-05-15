@@ -2,24 +2,24 @@
 
 # tauri-plugin-frame
 
-Custom window frame controls for Tauri v2 on Windows. Supports Windows 11 Snap Layout and custom titlebar styling.
+Custom window frame controls for Tauri v2 on Windows. Supports custom titlebars and native Windows 11 Snap Layout hover on custom maximize buttons.
 
 ## Platform Support
 
 This plugin is **Windows-only**. On other platforms, all methods are no-ops.
 
-- ✅ **Windows 11**: Full support including Snap Layout overlay.
-- ⚠️ **Windows 10**: Custom titlebar supported, but Snap Layout overlay is disabled.
+- ✅ **Windows 11**: Custom titlebar plus native Snap Layout menu on maximize hover.
+- ✅ **Windows 10**: Custom titlebar support. Snap Layout menu is a Windows 11 shell feature.
 
 ## Features
 
-- **Windows 11 Snap Layout** - Hover on maximize button to show snap layout picker (Windows 11 only)
-- **Custom Overlay Titlebar** - Replace default window decorations with fully customizable titlebar
-- **Builder Pattern Config** - Configure height, button width, hover colors via intuitive builder API
+- **Native Windows 11 Snap Layout** - Hover custom maximize button to show Windows snap picker via native `WM_NCHITTEST` / `HTMAXBUTTON`; no keybind or input simulation
+- **Custom Overlay Titlebar** - Replace default window decorations with customizable titlebar controls
+- **Builder Config** - Configure height, button width, hover colors, and Snap Layout overlay
 - **CSS Variable Integration** - Auto-updated `--tauri-frame-controls-width` for responsive header layouts
-- **Zero Frontend Code** - Plugin auto-injects all scripts, no JavaScript setup required
+- **Zero Frontend Code** - Plugin auto-injects titlebar scripts; no JavaScript command required
 - **Auto-apply Mode** - Apply titlebar to all windows automatically without per-window setup
-- **Lightweight** - Minimal footprint, Windows-only (no-op on other platforms)
+- **Lightweight** - Minimal footprint, Windows-only behavior (no-op on other platforms)
 
 ## Install
 
@@ -39,11 +39,12 @@ Add to `src-tauri/capabilities/default.json`:
     "core:window:allow-set-focus",
     "core:window:allow-is-maximized",
     "core:window:allow-start-dragging",
-    "core:window:allow-toggle-maximize",
-    "frame:default"
+    "core:window:allow-toggle-maximize"
   ]
 }
 ```
+
+No `frame:*` permission is required; plugin exposes no frontend command.
 
 Set in `tauri.conf.json`:
 ```json
@@ -63,27 +64,11 @@ Set in `tauri.conf.json`:
 
 ### Recommended: Auto-apply to all windows
 
-> **This is the recommended approach** - simpler setup and automatically applies to all windows.
 ```rust
 use tauri_plugin_frame::FramePluginBuilder;
 
 tauri::Builder::default()
-    .plugin(
-        FramePluginBuilder::new()
-            // Titlebar height in pixels
-            .titlebar_height(32)
-            // Button width in pixels
-            .button_width(46)
-            // Automatically apply titlebar to all windows
-            .auto_titlebar(true)
-            // Delay before pressing Alt to hide snap overlay numbers (ms)
-            .snap_overlay_delay_ms(15)
-            // Close button hover background color
-            .close_hover_bg("rgba(196,43,28,1)")
-            // Other buttons hover background color
-            .button_hover_bg("rgba(255,255,255,0.1)")
-            .build()
-    )
+    .plugin(FramePluginBuilder::new().auto_titlebar(true).build())
 ```
 
 ### Alternative: Manual per window
@@ -104,12 +89,12 @@ tauri::Builder::default()
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `titlebar_height(u32)` | `32` | Titlebar height in pixels |
-| `button_width(u32)` | `46` | Window control button width in pixels |
 | `auto_titlebar(bool)` | `false` | Auto-apply titlebar to all windows |
-| `snap_overlay_delay_ms(u64)` | `10` | Delay before Alt key press to hide snap overlay numbers |
+| `snap_overlay(bool)` | `true` | Enable native Windows 11 Snap Layout hover via hit-test overlay |
+| `titlebar_height(u32)` | `32` | Titlebar height in logical pixels |
+| `button_width(u32)` | `46` | Window control button width in logical pixels |
 | `close_hover_bg(&str)` | `rgba(196,43,28,1)` | Close button hover background color |
-| `button_hover_bg(&str)` | `rgba(0,0,0,0.2)` | Other buttons hover background color |
+| `button_hover_bg(&str)` | `rgba(0,0,0,0.2)` | Minimize/maximize hover background color |
 
 ## Methods
 
@@ -117,6 +102,11 @@ tauri::Builder::default()
 |--------|-------------|
 | `create_overlay_titlebar()` | Apply titlebar with configured height |
 | `create_overlay_titlebar_with_height(u32)` | Apply titlebar with custom height |
+
+
+## Windows 11 Snap Layout
+
+`snap_overlay(true)` installs a small native child HWND over the custom maximize button. The child returns `HTMAXBUTTON` for `WM_NCHITTEST`, which is the Windows-supported path for showing Snap Layout. The plugin does not simulate `Win+Z`, mouse input, or keyboard input.
 
 ## CSS Variable
 

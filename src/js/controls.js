@@ -11,7 +11,6 @@
 		if (!tauri) return setTimeout(run, 10);
 
 		const win = tauri.window.getCurrentWindow();
-		const invoke = tauri.core.invoke;
 
 		const updateFrameInset = () => {
 			const minBtn = document.getElementById("frame-tb-minimize");
@@ -19,6 +18,34 @@
 			const insetRight = window.innerWidth - minBtn.getBoundingClientRect().left;
 			document.documentElement.style.setProperty("--tauri-frame-controls-width", `${insetRight}px`);
 		};
+
+		const buttons = new Map();
+		let activeControl = null;
+
+		const renderHover = () => {
+			buttons.forEach(({ button, hoverBg }, control) => {
+				button.style.backgroundColor = control === activeControl ? hoverBg : "transparent";
+			});
+		};
+
+		const setActiveControl = (control) => {
+			activeControl = control;
+			renderHover();
+		};
+
+		const hitTestControls = (x, y) => {
+			const element = document.elementFromPoint(x, y);
+			const button = element?.closest?.("[id^='frame-tb-']");
+			setActiveControl(button ? button.id.slice("frame-tb-".length) : null);
+		};
+
+		window.__tauriFrameNativeMove = hitTestControls;
+
+		window.addEventListener("pointermove", (event) => {
+			hitTestControls(event.clientX, event.clientY);
+		}, true);
+
+		window.addEventListener("pointerleave", () => setActiveControl(null), true);
 
 		const createButton = (tbEl, id) => {
 			const btn = document.createElement("button");
@@ -43,15 +70,17 @@
 			const hoverBg = id === "close" ? "rgba(196,43,28,1)" : "rgba(0,0,0,0.2)";
 
 			const state = {
-				snapTimer: null,
 				actionLock: false,
 				lastAction: 0
 			};
 
-			const cancelSnap = () => {
-				if (state.snapTimer) {
-					clearTimeout(state.snapTimer);
-					state.snapTimer = null;
+			buttons.set(id, { button: btn, hoverBg });
+
+			const setHover = (hovered) => {
+				if (hovered) {
+					setActiveControl(id);
+				} else if (activeControl === id) {
+					setActiveControl(null);
 				}
 			};
 
@@ -60,33 +89,15 @@
 				if (state.actionLock || now - state.lastAction < 200) return;
 				state.actionLock = true;
 				state.lastAction = now;
-				cancelSnap();
+				setHover(false);
 				Promise.resolve(action()).finally(() => {
 					setTimeout(() => { state.actionLock = false; }, 100);
 				});
 			};
 
-			btn.onmouseenter = () => {
-				btn.style.backgroundColor = hoverBg;
-				if (id === "maximize" && !state.actionLock) {
-					cancelSnap();
-					state.snapTimer = setTimeout(() => {
-						if (!state.actionLock) {
-							win.setFocus().then(() => invoke("plugin:frame|show_snap_overlay"));
-						}
-						state.snapTimer = null;
-					}, 620);
-				}
-			};
+			btn.onmouseenter = () => setHover(true);
 
-			btn.onmouseleave = () => {
-				btn.style.backgroundColor = "transparent";
-				cancelSnap();
-			};
-
-			btn.onmousedown = (e) => {
-				if (e.button === 0) cancelSnap();
-			};
+			btn.onmouseleave = () => setHover(false);
 
 			if (id === "minimize") {
 				btn.innerHTML = ICONS.minimize;
@@ -95,7 +106,17 @@
 			} else if (id === "maximize") {
 				btn.innerHTML = ICONS.maximize;
 				btn.ariaLabel = "Maximize window";
-				btn.onclick = (e) => { e.preventDefault(); tryAction(() => win.toggleMaximize()); };
+				const toggleMaximize = (e) => { if (e) e.preventDefault(); tryAction(() => win.toggleMaximize()); };
+				btn.onclick = toggleMaximize;
+				win.listen("tauri-frame://snap/mousemove", ({ payload }) => {
+					if (Array.isArray(payload)) hitTestControls(payload[0], payload[1]);
+				});
+				win.listen("tauri-frame://snap/mouseenter", () => setHover(true));
+				win.listen("tauri-frame://snap/mouseleave", () => setHover(false));
+				win.listen("tauri-frame://snap/mousedown", () => setHover(true));
+				win.listen("tauri-frame://snap/mouseup", () => setHover(true));
+				win.listen("tauri-frame://snap/click", () => toggleMaximize());
+
 				win.onResized(() => {
 					win.isMaximized().then((max) => {
 						btn.innerHTML = max ? ICONS.restore : ICONS.maximize;
