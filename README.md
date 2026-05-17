@@ -14,6 +14,8 @@ This plugin is **Windows-only**. On other platforms, all methods are no-ops.
 ## Features
 
 - **Native Windows 11 Snap Layout** - Hover custom maximize button to show Windows snap picker via native `WM_NCHITTEST` / `HTMAXBUTTON`; no keybind or input simulation
+- **Dynamic Snap Overlay Positioning** - Snap overlay correctly positions itself based on visible window controls (minimize, maximize, close)
+- **Light/Dark Mode Hover Colors** - Separate hover background colors for light and dark mode, auto-switches with system theme
 - **Custom Overlay Titlebar** - Replace default window decorations with customizable titlebar controls
 - **Builder Config** - Configure height, button width, hover colors, and Snap Layout overlay
 - **CSS Variable Integration** - Auto-updated `--tauri-frame-controls-width` for responsive header layouts
@@ -94,7 +96,9 @@ tauri::Builder::default()
 | `titlebar_height(u32)` | `32` | Titlebar height in logical pixels |
 | `button_width(u32)` | `46` | Window control button width in logical pixels |
 | `close_hover_bg(&str)` | `rgba(196,43,28,1)` | Close button hover background color |
-| `button_hover_bg(&str)` | `rgba(0,0,0,0.2)` | Minimize/maximize hover background color |
+| `button_hover_bg(&str)` | both modes | Sets both light and dark mode hover colors for minimize/maximize buttons |
+| `button_hover_bg_light(&str)` | `rgba(0,0,0,0.1)` | Minimize/maximize hover background color in light mode |
+| `button_hover_bg_dark(&str)` | `rgba(255,255,255,0.1)` | Minimize/maximize hover background color in dark mode |
 
 ## Methods
 
@@ -107,6 +111,8 @@ tauri::Builder::default()
 ## Windows 11 Snap Layout
 
 `snap_overlay(true)` installs a small native child HWND over the custom maximize button. The child returns `HTMAXBUTTON` for `WM_NCHITTEST`, which is the Windows-supported path for showing Snap Layout. The plugin does not simulate `Win+Z`, mouse input, or keyboard input.
+
+The snap overlay dynamically positions itself based on which window controls are visible (minimize, maximize, close), ensuring it only covers the maximize button area regardless of the button configuration.
 
 ## CSS Variable
 
