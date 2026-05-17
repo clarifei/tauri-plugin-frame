@@ -61,7 +61,7 @@ struct SnapState {
     overlay: HWND,
     titlebar_height: u32,
     button_width: u32,
-    right_index: u32,
+    right_index: u32, // number of buttons to the right of the maximize button
     hovering: bool,
     pressing: bool,
     last_x: i32,
@@ -72,7 +72,7 @@ struct SnapState {
 
 unsafe impl Send for SnapState {}
 
-pub fn install<R: Runtime>(window: &WebviewWindow<R>, titlebar_height: u32, button_width: u32) -> Result<()> {
+pub fn install<R: Runtime>(window: &WebviewWindow<R>, titlebar_height: u32, button_width: u32, right_index: u32) -> Result<()> {
     let hwnd = window_hwnd(window)? as isize;
     let webview = window.clone();
 
@@ -82,6 +82,7 @@ pub fn install<R: Runtime>(window: &WebviewWindow<R>, titlebar_height: u32, butt
             hwnd,
             titlebar_height,
             button_width,
+            right_index,
             Box::new(move |event| {
                 let _ = target.emit(event, ());
             }),
@@ -94,7 +95,7 @@ pub fn install<R: Runtime>(window: &WebviewWindow<R>, titlebar_height: u32, butt
     Ok(())
 }
 
-pub fn install_window<R: Runtime>(window: &Window<R>, titlebar_height: u32, button_width: u32) -> Result<()> {
+pub fn install_window<R: Runtime>(window: &Window<R>, titlebar_height: u32, button_width: u32, right_index: u32) -> Result<()> {
     let hwnd = window_hwnd(window)? as isize;
     let emit_window = window.clone();
     let main_window = window.clone();
@@ -106,6 +107,7 @@ pub fn install_window<R: Runtime>(window: &Window<R>, titlebar_height: u32, butt
             hwnd,
             titlebar_height,
             button_width,
+            right_index,
             Box::new(move |event| {
                 let _ = target.emit(event, ());
             }),
@@ -123,6 +125,7 @@ unsafe fn install_hwnd(
     hwnd: isize,
     titlebar_height: u32,
     button_width: u32,
+    right_index: u32,
     emit: Box<dyn Fn(&'static str) + Send>,
     emit_move: Box<dyn Fn(i32, i32) + Send>,
 ) {
@@ -159,7 +162,7 @@ unsafe fn install_hwnd(
             overlay,
             titlebar_height,
             button_width,
-            right_index: 1,
+            right_index,
             hovering: false,
             pressing: false,
             last_x: 0,

@@ -61,9 +61,13 @@ impl<R: Runtime> WebviewWindowExt<R> for WebviewWindow<R> {
             .flatten()
             .collect();
 
+            // right_index = number of buttons to the right of the maximize button
+            // Button order (right to left): close, maximize, minimize
+            let right_index = if controls.contains(&"close") { 1 } else { 0 };
+
             let _ = win.eval(crate::build_scripts(height, Some(controls)));
             if crate::snap_overlay_enabled() {
-                let _ = crate::snap::install(&win, height, crate::get_button_width());
+                let _ = crate::snap::install(&win, height, crate::get_button_width(), right_index);
             }
 
             let win2 = win.clone();

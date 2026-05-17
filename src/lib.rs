@@ -31,7 +31,9 @@ static NATIVE_SNAP_OVERLAY: AtomicBool = AtomicBool::new(true);
 #[cfg(windows)]
 static CLOSE_HOVER_BG: OnceLock<String> = OnceLock::new();
 #[cfg(windows)]
-static BUTTON_HOVER_BG: OnceLock<String> = OnceLock::new();
+static BUTTON_HOVER_BG_LIGHT: OnceLock<String> = OnceLock::new();
+#[cfg(windows)]
+static BUTTON_HOVER_BG_DARK: OnceLock<String> = OnceLock::new();
 
 pub struct FramePluginBuilder {
     #[cfg(windows)]
@@ -45,7 +47,9 @@ pub struct FramePluginBuilder {
     #[cfg(windows)]
     close_hover_bg: String,
     #[cfg(windows)]
-    button_hover_bg: String,
+    button_hover_bg_light: String,
+    #[cfg(windows)]
+    button_hover_bg_dark: String,
 }
 
 impl Default for FramePluginBuilder {
@@ -68,7 +72,9 @@ impl FramePluginBuilder {
             #[cfg(windows)]
             close_hover_bg: "rgba(196,43,28,1)".into(),
             #[cfg(windows)]
-            button_hover_bg: "rgba(0,0,0,0.2)".into(),
+            button_hover_bg_light: "rgba(0,0,0,0.1)".into(),
+            #[cfg(windows)]
+            button_hover_bg_dark: "rgba(255,255,255,0.1)".into(),
         }
     }
 
@@ -127,9 +133,36 @@ impl FramePluginBuilder {
         self
     }
 
+    /// Set the hover background color for non-close buttons in light mode.
+    #[cfg(windows)]
+    pub fn button_hover_bg_light(mut self, color: impl Into<String>) -> Self {
+        self.button_hover_bg_light = color.into();
+        self
+    }
+
+    #[cfg(not(windows))]
+    pub fn button_hover_bg_light(self, _: impl Into<String>) -> Self {
+        self
+    }
+
+    /// Set the hover background color for non-close buttons in dark mode.
+    #[cfg(windows)]
+    pub fn button_hover_bg_dark(mut self, color: impl Into<String>) -> Self {
+        self.button_hover_bg_dark = color.into();
+        self
+    }
+
+    #[cfg(not(windows))]
+    pub fn button_hover_bg_dark(self, _: impl Into<String>) -> Self {
+        self
+    }
+
+    /// Set a single hover background color for non-close buttons (applies to both light and dark mode).
     #[cfg(windows)]
     pub fn button_hover_bg(mut self, color: impl Into<String>) -> Self {
-        self.button_hover_bg = color.into();
+        let c = color.into();
+        self.button_hover_bg_light = c.clone();
+        self.button_hover_bg_dark = c;
         self
     }
 
@@ -145,8 +178,8 @@ impl FramePluginBuilder {
         AUTO_TITLEBAR.store(self.auto_titlebar, Ordering::SeqCst);
         NATIVE_SNAP_OVERLAY.store(self.snap_overlay, Ordering::SeqCst);
         let _ = CLOSE_HOVER_BG.set(self.close_hover_bg);
-        let _ = BUTTON_HOVER_BG.set(self.button_hover_bg);
-
+        let _ = BUTTON_HOVER_BG_LIGHT.set(self.button_hover_bg_light);
+        let _ = BUTTON_HOVER_BG_DARK.set(self.button_hover_bg_dark);
 
         Builder::new("frame")
             .setup(|app, _| {
@@ -165,7 +198,8 @@ impl FramePluginBuilder {
                 tauri::async_runtime::spawn(async move {
                     let _ = webview.eval(build_scripts(height, None));
                     if snap_overlay {
-                        let _ = crate::snap::install_window(&webview.window(), height, button_width);
+                        // Default right_index=1 (close button is present by default)
+                        let _ = crate::snap::install_window(&webview.window(), height, button_width, 1);
                     }
                 });
             })
@@ -215,16 +249,20 @@ pub(crate) fn build_scripts(height: u32, controls: Option<Vec<&str>>) -> String 
     let close_hover = CLOSE_HOVER_BG
         .get()
         .map_or("rgba(196,43,28,1)", |s| s.as_str());
-    let button_hover = BUTTON_HOVER_BG
+    let button_hover_light = BUTTON_HOVER_BG_LIGHT
         .get()
-        .map_or("rgba(0,0,0,0.2)", |s| s.as_str());
+        .map_or("rgba(0,0,0,0.1)", |s| s.as_str());
+    let button_hover_dark = BUTTON_HOVER_BG_DARK
+        .get()
+        .map_or("rgba(255,255,255,0.1)", |s| s.as_str());
 
     let script_tb = include_str!("js/titlebar.js").replace("\"32px\"", &height_px);
     let mut script_controls = include_str!("js/controls.js")
         .replace("\"32px\"", &height_px)
         .replace("\"46px\"", &width_px)
-        .replace("rgba(196,43,28,1)", close_hover)
-        .replace("rgba(0,0,0,0.2)", button_hover);
+        .replace("\"__CLOSE_HOVER_BG__\"", &format!("\"{}\"", close_hover))
+        .replace("\"__BUTTON_HOVER_BG_LIGHT__\"", &format!("\"{}\"", button_hover_light))
+        .replace("\"__BUTTON_HOVER_BG_DARK__\"", &format!("\"{}\"", button_hover_dark));
 
     if let Some(ctrl) = controls {
         script_controls = script_controls.replacen(
